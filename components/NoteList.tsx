@@ -15,3 +15,6 @@ const NoteList = ({ notes }: any) => {
 };
 
 export default NoteList;
+
+
+// npx expo install react-native-appwrite react-native-url-polyfill

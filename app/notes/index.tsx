@@ -1,25 +1,36 @@
-import { useState } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  FlatList,
-  TouchableOpacity,
-  Modal,
-  TextInput,
-} from "react-native";
+import { useEffect, useState } from "react";
+import { View, Text, StyleSheet, TouchableOpacity, Alert } from "react-native";
 
 import NoteList from "@/components/NoteList";
+import AddNoteModal from "@/components/AddNoteModal";
+
+import noteService from "@/services/noteService";
 
 const NoteScreen = () => {
-  const [notes, setNotes] = useState([
-    { id: 1, text: "Note one" },
-    { id: 2, text: "Note two" },
-    { id: 3, text: "Note three" },
-  ]);
-
-  const [modal, setModal] = useState(false);
+  const [notes, setNotes] = useState([]);
+  const [modalVisible, setModalVisible] = useState(false);
   const [newNote, setNewNote] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    fetchNotes();
+  }, []);
+
+  const fetchNotes = async () => {
+    setLoading(true);
+    const response = await noteService.getNotes();
+
+    if (response.error) {
+      setError(response.error);
+      Alert.alert("Error", response.error);
+    } else {
+      setNotes(response.data);
+      setError(null);
+    }
+
+    setLoading(false);
+  };
 
   const addNote = () => {
     if (newNote.trim() === "") return;
@@ -27,51 +38,28 @@ const NoteScreen = () => {
     setNotes((prev) => [...prev, { id: Date.now(), text: newNote }]);
 
     setNewNote("");
-    setModal(false);
+    setModalVisible(false);
   };
 
   return (
     <View style={styles.container}>
       {/* note list */}
-      <NoteList notes={notes}/>
+      <NoteList notes={notes} />
 
-      <TouchableOpacity style={styles.addButton} onPress={() => setModal(true)}>
+      <TouchableOpacity
+        style={styles.addButton}
+        onPress={() => setModalVisible(true)}
+      >
         <Text style={styles.addButtonText}>Add note</Text>
       </TouchableOpacity>
 
-      <Modal
-        visible={modal}
-        animationType="slide"
-        transparent
-        onRequestClose={() => setModal(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Add new note</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Enter note"
-              placeholderTextColor="#aaa"
-              value={newNote}
-              onChangeText={setNewNote}
-            />
-            <View style={styles.modalButton}>
-              <TouchableOpacity style={styles.saveButton} onPress={addNote}>
-                <Text style={styles.saveButtonText}>Save</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.cancelButton}
-                onPress={() => {
-                  setModal(false);
-                  setNewNote("");
-                }}
-              >
-                <Text style={styles.cancelButtonText}>Cancel</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
+      <AddNoteModal
+        modalVisible={modalVisible}
+        setModalVisible={setModalVisible}
+        newNote={newNote}
+        setNewNote={setNewNote}
+        addNote={addNote}
+      />
     </View>
   );
 };
@@ -84,7 +72,7 @@ export const styles = StyleSheet.create({
     padding: 20,
     backgroundColor: "white",
   },
-  
+
   addButton: {
     position: "absolute",
     bottom: 20,
@@ -99,55 +87,5 @@ export const styles = StyleSheet.create({
     color: "white",
     fontSize: 18,
     fontWeight: "bold",
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.3)",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  modalContent: {
-    backgroundColor: "#fff",
-    padding: 20,
-    borderRadius: 10,
-    width: "80%",
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
-    marginBottom: 10,
-    textAlign: "center",
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 8,
-    padding: 10,
-    fontSize: 16,
-    marginBottom: 15,
-  },
-  modalButton: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
-  cancelButton: {
-    backgroundColor: "red",
-    padding: 10,
-    borderRadius: 5,
-    // flex: 1,
-    alignItems: "center",
-  },
-  cancelButtonText: {
-    fontSize: 16,
-  },
-  saveButtonText: {
-    fontSize: 16,
-  },
-  saveButton: {
-    backgroundColor: "green",
-    padding: 10,
-    borderRadius: 5,
-    // flex: 1,
-    alignItems: "center",
   },
 });
