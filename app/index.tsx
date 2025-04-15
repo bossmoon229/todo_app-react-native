@@ -1,9 +1,34 @@
-import { Text, View, StyleSheet, Image, TouchableOpacity } from "react-native";
+import {
+  Text,
+  View,
+  StyleSheet,
+  Image,
+  TouchableOpacity,
+  ActivityIndicator,
+} from "react-native";
 import PostImage from "@/assets/images/favicon.png";
 import { router, useRouter } from "expo-router";
+import { useAuth } from "@/context/AuthContext";
+import { useEffect } from "react";
 
 const HomeScreen = () => {
+  const { user, loading } = useAuth();
   const router = useRouter();
+
+  useEffect(() => {
+    if(!loading && user){
+      router.replace('/notes')
+    }
+  }, [user, loading]);
+
+  if(loading){
+    return(
+      <View style={styles.centeredContainer}>
+        <ActivityIndicator size='large' color='red'/>
+      </View>
+    )
+  }
+
   return (
     <View style={styles.container}>
       <Image source={PostImage} style={styles.image} />
@@ -14,9 +39,7 @@ const HomeScreen = () => {
         style={styles.button}
         onPress={() => router.push("/notes")}
       >
-        <Text style={styles.buttonText}>
-      Get started
-        </Text>
+        <Text style={styles.buttonText}>Get started</Text>
       </TouchableOpacity>
     </View>
   );
@@ -49,16 +72,21 @@ const styles = StyleSheet.create({
     color: "#666",
   },
   button: {
-    backgroundColor: 'lightblue',
+    backgroundColor: "lightblue",
     paddingVertical: 12,
     paddingHorizontal: 25,
     borderRadius: 8,
-    alignItems: 'center'
+    alignItems: "center",
   },
-  buttonText:{
+  buttonText: {
     fontSize: 18,
-    fontWeight: 'bold'
-  }
+    fontWeight: "bold",
+  },
+  centeredContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    textAlign: 'center',
+  },
 });
 
 export default HomeScreen;
